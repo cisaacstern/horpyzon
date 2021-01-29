@@ -1,6 +1,9 @@
 # <h1>Table of Contents<span class="tocSkip"></span></h1>
 # <div class="toc"><ul class="toc-item"><li><span><a href="#Load-dataset" data-toc-modified-id="Load-dataset-1"><span class="toc-item-num">1&nbsp;&nbsp;</span>Load dataset</a></span><ul class="toc-item"><li><span><a href="#Open-and-explore" data-toc-modified-id="Open-and-explore-1.1"><span class="toc-item-num">1.1&nbsp;&nbsp;</span>Open and explore</a></span></li><li><span><a href="#Plot" data-toc-modified-id="Plot-1.2"><span class="toc-item-num">1.2&nbsp;&nbsp;</span>Plot</a></span></li></ul></li><li><span><a href="#Solar-azimuth" data-toc-modified-id="Solar-azimuth-2"><span class="toc-item-num">2&nbsp;&nbsp;</span>Solar azimuth</a></span><ul class="toc-item"><li><span><a href="#Find-lat/long-of-center" data-toc-modified-id="Find-lat/long-of-center-2.1"><span class="toc-item-num">2.1&nbsp;&nbsp;</span>Find lat/long of center</a></span></li><li><span><a href="#Choose-a-datetime" data-toc-modified-id="Choose-a-datetime-2.2"><span class="toc-item-num">2.2&nbsp;&nbsp;</span>Choose a <code>datetime</code></a></span></li><li><span><a href="#Find-solar-azimuth" data-toc-modified-id="Find-solar-azimuth-2.3"><span class="toc-item-num">2.3&nbsp;&nbsp;</span>Find solar azimuth</a></span></li></ul></li><li><span><a href="#Test-Horizon" data-toc-modified-id="Test-Horizon-3"><span class="toc-item-num">3&nbsp;&nbsp;</span>Test <code>Horizon</code></a></span><ul class="toc-item"><li><span><a href="#Run-an-obstruction" data-toc-modified-id="Run-an-obstruction-3.1"><span class="toc-item-num">3.1&nbsp;&nbsp;</span>Run an obstruction</a></span></li></ul></li></ul></div>
 
+# <h1>Table of Contents<span class="tocSkip"></span></h1>
+# <div class="toc"><ul class="toc-item"><li><span><a href="#Load-dataset" data-toc-modified-id="Load-dataset-1"><span class="toc-item-num">1&nbsp;&nbsp;</span>Load dataset</a></span><ul class="toc-item"><li><span><a href="#Open-and-explore" data-toc-modified-id="Open-and-explore-1.1"><span class="toc-item-num">1.1&nbsp;&nbsp;</span>Open and explore</a></span></li><li><span><a href="#Plot" data-toc-modified-id="Plot-1.2"><span class="toc-item-num">1.2&nbsp;&nbsp;</span>Plot</a></span></li></ul></li><li><span><a href="#Solar-azimuth" data-toc-modified-id="Solar-azimuth-2"><span class="toc-item-num">2&nbsp;&nbsp;</span>Solar azimuth</a></span><ul class="toc-item"><li><span><a href="#Find-lat/long-of-center" data-toc-modified-id="Find-lat/long-of-center-2.1"><span class="toc-item-num">2.1&nbsp;&nbsp;</span>Find lat/long of center</a></span></li><li><span><a href="#Choose-a-datetime" data-toc-modified-id="Choose-a-datetime-2.2"><span class="toc-item-num">2.2&nbsp;&nbsp;</span>Choose a <code>datetime</code></a></span></li><li><span><a href="#Find-solar-azimuth" data-toc-modified-id="Find-solar-azimuth-2.3"><span class="toc-item-num">2.3&nbsp;&nbsp;</span>Find solar azimuth</a></span></li></ul></li><li><span><a href="#Test-Horizon" data-toc-modified-id="Test-Horizon-3"><span class="toc-item-num">3&nbsp;&nbsp;</span>Test <code>Horizon</code></a></span><ul class="toc-item"><li><span><a href="#Run-an-obstruction" data-toc-modified-id="Run-an-obstruction-3.1"><span class="toc-item-num">3.1&nbsp;&nbsp;</span>Run an obstruction</a></span></li></ul></li></ul></div>
+
 # +
 import os
 import datetime
@@ -39,7 +42,11 @@ plt.show()
 # ## Find lat/long of center
 
 corner_lng, corner_lat = dataset.transform * (0,0)
-#corner_lng, corner_lat
+corner_lng, corner_lat
+
+np.abs(corner_lng)
+
+np.abs(corner_lng) / 15
 
 res = (dataset.bounds.right - dataset.bounds.left) / dataset.shape[0]
 #res
