@@ -4,7 +4,7 @@ from scipy.ndimage import rotate
 
 from numba import jit
 
-@jit(nopython=False)
+@jit(forceobj=True)
 def _rotate2azimuth(azimuth, elev_grid):
     '''
     rotates a grid so that North is re-referenced to be

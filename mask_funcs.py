@@ -5,10 +5,8 @@ import os
 import logging
 import time
 
-import rasterio
 import numpy as np
 from scipy import ndimage
-import matplotlib.pyplot as plt
 from numba import jit
 
 from init_helpers import (
@@ -41,7 +39,7 @@ def _calc_rotated_mask(alt, rot_slope):
             
     return mask
 
-@jit(nopython=False)
+@jit(forceobj=True)
 def _bbox(array):
     '''
     A helper for the _rerotate_mask method.
@@ -53,7 +51,7 @@ def _bbox(array):
 
     return rmin, rmax, cmin, cmax
 
-@jit(nopython=False)
+@jit(forceobj=True)
 def _rerotate_mask(rot_elev, rot_mask, azi):   
     '''
     rotate mask back to original position, set non-1s to zeros
@@ -80,7 +78,7 @@ def _rerotate_mask(rot_elev, rot_mask, azi):
 
     return mask
 
-@jit(nopython=False)
+@jit(forceobj=True)
 def _square_mask(mask, resolution):
     '''
 
@@ -108,13 +106,11 @@ def _square_mask(mask, resolution):
     return mask
 
 
+@jit(forceobj=True)
+def go_fast(azi, arr, alt, res):
+    '''
 
-#---------------------------------------------------------------------
-# Init w/ args
-#---------------------------------------------------------------------
-@jit(nopython=False)
-def go_fast(azi, arr, alt):
-
+    '''
     rotated_elevation_grid = _rotate2azimuth(azi, arr)
 
     # ( Extra args to avoid calling np.zeros w/in Numba )
@@ -129,6 +125,7 @@ def go_fast(azi, arr, alt):
     )
 
     resolution = rotated_elevation_grid.shape[0]
+    print('inside go_fast, resolution is known as %s' % res)
 
     #---------------------------------------------------------------------
     # Run mask
@@ -140,37 +137,6 @@ def go_fast(azi, arr, alt):
     rerotated_mask = _rerotate_mask(
         rot_elev=rot_elev, rot_mask=rotated_mask, azi=azi
     )
-    square_mask = _square_mask(mask=rerotated_mask, resolution=resolution)
+    square_mask = _square_mask(mask=rerotated_mask, resolution=res)
 
-    #---------------------------------------------------------------------
-    # Do something with mask
-    #---------------------------------------------------------------------
     return square_mask
-
-#---------------------------------------------------------------------
-# Arguments
-#---------------------------------------------------------------------
-data_dir = 'data_subset'
-data_lst = os.listdir(data_dir)
-data_fn = data_lst[0]
-dataset = rasterio.open(data_dir + '/' + data_fn)
-
-azi = 90
-arr = dataset.read(1) #np.ones((100,100))
-alt = 5
-
-# DO NOT REPORT THIS... COMPILATION TIME IS INCLUDED IN THE EXECUTION TIME!
-start = time.time()
-go_fast(azi=azi, arr=arr, alt=alt)
-end = time.time()
-print("Elapsed (with compilation) = %s" % (end - start))
-
-# NOW THE FUNCTION IS COMPILED, RE-TIME IT EXECUTING FROM CACHE
-start = time.time()
-img = go_fast(azi=azi, arr=arr, alt=alt)
-end = time.time()
-print("Elapsed (after compilation) = %s" % (end - start))
-
-print(img)
-plt.imshow(img)
-plt.show()
