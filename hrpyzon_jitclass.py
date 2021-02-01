@@ -1,13 +1,39 @@
+# <h1>Table of Contents<span class="tocSkip"></span></h1>
+# <div class="toc"><ul class="toc-item"></ul></div>
+
 '''
 
 '''
 import logging
+import time
+
 import numpy as np
 from scipy import ndimage
 
+from numba import int64, float64
+from numba.experimental import jitclass
+
+from init_helpers import (
+    _rotate2azimuth,
+    _slope,
+    _calc_horizon_indices,
+    _calc_horizon_slope,
+)
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
+'''
+spec = [
+    ('azimuth', float64),
+    ('elev_grid', float64[:,:]),
+    ('rotated_grid', float64[:,:]),
+    ('rotated_elevation_grid', float64[:,:]),
+    ('rotated_slope_array', float64[:,:]),
+    ('resolution', int64),
+]
 
+@jitclass(spec)
+'''
 class Horizon():
     '''
     This class initializes horizons in the "ill posed manner" described in Dozier.
@@ -17,123 +43,44 @@ class Horizon():
     initalize this class based on the azimuth: because azimuths are reused for multiple timepoints
     i.e. altitudes. Azimuths are also the most computationally expensive.
     '''
-    def __init__(self, df, azimuth, elev_grid):
+    def __init__(self, azimuth, elev_grid):
         '''
 
-        '''
-        self.df = df
+        ''' 
+
         self.azimuth = azimuth
-        self.rotated_elevation_grid, self.rotated_slope_array = (
-            self._initialize_azimuth(azimuth=azimuth, elev_grid=elev_grid)
-        )
 
-    #---------------------------------------------------------------------
-    # Private API
-    #---------------------------------------------------------------------
-
-    @staticmethod
-    def _initialize_azimuth(azimuth, elev_grid):
-        '''
-        This is an static method which serves as a helper for __init__.
-        It is static bc somehow I think that'll make it easier to @jit it.
-        '''
-        logger.debug('Hello you\'re in the initalizer')
-
-        def _rotate2azimuth(azimuth, elev_grid):
-            '''
-            rotates a grid so that North is re-referenced to be
-            facing the solar azimuth. See Dozier page XX fig XX.
-            '''
-            logger.debug('Step 1: you\'re in the rotater')
-
-            return ndimage.rotate(input=elev_grid, angle=(-azimuth),
-                    reshape=True, order=0, mode='constant', cval=np.nan)
-        
-        def _slope(g, i, j, k):
-            '''
-            g is the elevation grid, i and j are row indicies, k is the column index
-            '''
-            if g[j, k] >= g[i, k]:
-                return (g[j, k] - g[i, k])/(j-i)
-            else:
-                return 0
-        
-        def _calc_horizon_indices(grid):
-            '''
-            the horzPt for a given elevG[i, k] is expressed as an index value of elevG[]
-            '''
-
-            horz_arr = np.zeros(grid.shape, dtype=int)
-            nhorz = horz_arr.shape[0]
-
-            logger.debug(f'Step 2: you\'re in the indexer, nhorz = {nhorz}')
-
-            for k in range(0, nhorz-1):
-                                
-                horz_arr[nhorz-1, k] = nhorz - 1 #the first entry is its own horizon
-
-                for i in range(nhorz-2, -1, -1): #loop from next-to-end backward to beginning
-                    
-                    j = i + 1
-                    horzj = horz_arr[j, k]
-                    i_to_j = _slope(grid, i=i, j=j, k=k)
-                    i_to_horzj = _slope(grid, i=i, j=horzj, k=k)
-
-                    while i_to_j < i_to_horzj:
-                        j = horzj
-                        horzj = horz_arr[j, k]
-                        i_to_j = _slope(grid, i=i, j=j, k=k)
-                        i_to_horzj = _slope(grid, i=i, j=horzj, k=k)
-
-                    if i_to_j > i_to_horzj:
-                        horz_arr[i, k] = j
-                    elif i_to_j == 0:
-                        horz_arr[i, k] = i
-                    else:
-                        horz_arr[i, k] = horzj
-
-            return horz_arr
-
-        def _calc_horizon_slope(grid, horz_arr, scale=0.01):
-            '''
-            takes a rotated elevation grid and a corresponding horzPt array,
-            from self.fwdHorz2D, and calculates the slope from each point on
-            the elevation grid to its horizon point in the horzPt array.
-            returns the elevation grid and a 'slope to horizon (radians)' array
-            '''
-            logger.warning('Step 3: you\'re in the sloper. WHAT IS SCALE?')
-
-            shape = grid.shape
-            slope_arr = np.zeros(shape)
-
-            for k in range(0, shape[0]):
-                for i in range(0, shape[0]):
-                    slope_arr[i,k] = (
-                        np.arctan2(
-                            grid[horz_arr[i,k], k] - grid[i,k],
-                            ((scale * horz_arr[i,k]) - (scale * i))
-                        )
-                    )
-            return slope_arr
-        
         rotated_grid = _rotate2azimuth(azimuth, elev_grid)
         horizon_indices = _calc_horizon_indices(grid=rotated_grid)
         rotated_slope_array = (
             _calc_horizon_slope(rotated_grid, horz_arr=horizon_indices)
         )
 
-        return rotated_grid, rotated_slope_array    
+        self.rotated_elevation_grid = rotated_grid
+        self.rotated_slope_array = rotated_slope_array
+
+        #self.rotated_elevation_grid, self.rotated_slope_array = (
+        #    _initialize_azimuth(azimuth=azimuth, elev_grid=elev_grid)
+        #)
+        self.resolution = elev_grid.shape[0]
+
+    #---------------------------------------------------------------------
+    # Private API
+    #---------------------------------------------------------------------
+      
 
     #---------------------------------------------------------------------
     # Public API
     #---------------------------------------------------------------------
 
-    @staticmethod
-    def calc_obstruction_for_altitude(altitude, azimuth, rot_elev, rot_slope, 
-                                        resolution):
+    def calc_obstruction_for_altitude(self, altitude, azimuth):
         '''
 
         '''
+        rot_elev=self.rotated_elevation_grid 
+        rot_slope=self.rotated_slope_array
+        resolution=self.resolution
+        
         def _calc_rotated_mask(alt, rot_slope):
             '''
             takes an elevation array, a 'slope to horizon (radians)' array,
@@ -224,3 +171,18 @@ class Horizon():
         square_mask = _square_mask(mask=rerotated_mask, resolution=resolution)
 
         return square_mask
+
+#---------------------------------------------------------------------
+# Test area
+#---------------------------------------------------------------------
+azimuth = 90
+test_arr = np.ones((100,100))
+print('azimuth is of type %s' % type(azimuth))
+print('array is of type %s' % type(test_arr))
+print('array content is of type %s' % type(test_arr[1,1]))
+
+start = time.time()
+hzn = Horizon(azimuth=azimuth, elev_grid=test_arr)
+end = time.time()
+
+print('Elapsed = %s' % (end - start))

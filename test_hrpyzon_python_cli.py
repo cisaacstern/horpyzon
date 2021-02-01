@@ -2,6 +2,7 @@
 import os
 import datetime
 import logging
+import time
 
 import rasterio
 import numpy as np
@@ -94,9 +95,7 @@ class Test():
             day = day+1
             hour = hour-24
         
-        logger.warning('_return_utc needs update for edge mos/yrs')
-
-        print(ldt.year, ldt.month, day, hour, ldt.minute)
+        logger.warning('_return_utc needs update for edge cases mos/yrs')
 
         return datetime.datetime(ldt.year, ldt.month, day, hour, ldt.minute,
                                 0, 0, tzinfo=datetime.timezone.utc)
@@ -120,11 +119,12 @@ class Test():
                         )
         return mask 
 
-    def plot_mask(self):
+    def plot_mask(self, show=True):
         fig,ax = plt.subplots(1, figsize=(5,5))
         mask = self.return_mask()
         ax.imshow(mask, cmap='binary')
-        plt.show()
+        if show==True:
+            plt.show()
 
 
 #-------------------------------------------------------
@@ -132,11 +132,12 @@ class Test():
 #-------------------------------------------------------
 subset_dir = 'data_subset'
 subset_dat = os.listdir(subset_dir)
-
-
 local_dt = datetime.datetime(year=2021, month=3, day=1, hour=8, minute=0)
-
 test = Test(data_dir=subset_dir, data_fn=subset_dat[0], 
             local_dt=local_dt)
 
-test.plot_mask()
+start = time.time()
+test.plot_mask(show=False)
+end = time.time()
+print("Elapsed (python, no compilation) = %s" % (end - start))
+
