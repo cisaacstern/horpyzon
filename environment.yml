@@ -3,11 +3,14 @@ channels:
   - conda-forge
   - defaults
 dependencies:
+  - holoviews
   - matplotlib=3.3.4
   - numba=0.52.0
   - numpy=1.19.5
+  - panel
   - python=3.7.9
   - rasterio=1.1.7
   - scipy=1.6.0
+  - xarray
   - pip:
     - pysolar==0.9
