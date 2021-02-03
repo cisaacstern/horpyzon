@@ -8,9 +8,11 @@ dependencies:
   - numba=0.52.0
   - numpy=1.19.5
   - panel
+  - pip=21.0.1
   - python=3.7.9
   - rasterio=1.1.7
   - scipy=1.6.0
   - xarray
   - pip:
     - pysolar==0.9
+    - richdem==0.3.4

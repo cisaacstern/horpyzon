@@ -1,14 +1,25 @@
+# +
 import numpy as np
 import holoviews as hv
 from holoviews import opts
+import matplotlib.pyplot as plt
+
+from plotsun import plot_sun
+
 hv.extension('bokeh', 'matplotlib')
+# -
 
 # # Load data
 
 data = np.load('npz_timeseries/subset.npz')
 arr = data['arr']
 stack = data['stack']
-print(arr.shape, stack.shape)
+sun = data['sun']
+print(arr.shape, stack.shape, sun.shape)
+
+stack[:,:,25]
+
+plt.imshow(stack[:,:,25], cmap='binary')
 
 # +
 stack = hv.Dataset((np.arange(stack.shape[2]),
@@ -43,6 +54,11 @@ shadows = stack.to(hv.Image, ['x', 'y'])
 
 elevation
 
+dims = {'figsize':(4,5), 'top':1, 'bottom':0, 'left':0.2, 'right':0.95}
+plot_sun(sunposition=sun, d=dims)
+
 elevation * shadows
+
+stack[:,:,24]
 
 
